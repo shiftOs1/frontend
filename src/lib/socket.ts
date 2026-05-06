@@ -31,21 +31,21 @@ export const disconnectSocket = (): void => {
   }
 };
 
-// ── Typed event names (mirror backend) ───────────────────────────────────────
 export const SocketEvents = {
-  NOTIFICATION_NEW: 'notification:new',
-  SHIFT_CREATED: 'shift:created',
-  SHIFT_UPDATED: 'shift:updated',
-  SHIFT_DELETED: 'shift:deleted',
-  SHIFT_ASSIGNED: 'shift:assigned',
-  SESSION_STARTED: 'session:started',
-  SESSION_ENDED: 'session:ended',
-  SESSION_APPROVED: 'session:approved',
-  SESSION_REJECTED: 'session:rejected',
-  EXCHANGE_REQUESTED: 'exchange:requested',
-  EXCHANGE_RESPONDED: 'exchange:responded',
-  EXCHANGE_APPROVED: 'exchange:approved',
-  LEAVE_RESPONDED: 'leave:responded',
-  AVAILABILITY_RESPONDED: 'availability:responded',
-  DASHBOARD_REFRESH: 'dashboard:refresh',
+  NOTIFICATION_NEW:      'notification:new',
+  SHIFT_CREATED:         'shift:created',
+  SHIFT_UPDATED:         'shift:updated',
+  SHIFT_DELETED:         'shift:deleted',
+  SHIFT_ASSIGNED:        'shift:assigned',
+  SHIFT_CANCELLED:       'shift:cancelled',
+  SESSION_STARTED:       'session:started',
+  SESSION_ENDED:         'session:ended',
+  SESSION_APPROVED:      'session:approved',
+  SESSION_REJECTED:      'session:rejected',
+  EXCHANGE_REQUESTED:    'exchange:requested',
+  EXCHANGE_RESPONDED:    'exchange:responded',
+  EXCHANGE_APPROVED:     'exchange:approved',
+  LEAVE_RESPONDED:       'leave:responded',
+  AVAILABILITY_RESPONDED:'availability:responded',
+  DASHBOARD_REFRESH:     'dashboard:refresh',
 } as const;
