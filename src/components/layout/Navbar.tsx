@@ -2,46 +2,51 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Search, Moon, Sun } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useUIStore } from '@/store/uiStore';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { unreadCount, fetchNotifications } = useNotificationStore();
-  const { sidebarCollapsed } = useUIStore();
+  const { sidebarCollapsed, setSidebarOpen } = useUIStore();
 
   useEffect(() => {
     fetchNotifications();
   }, []);
 
   const initials = user?.name
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'U';
+    ?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
   return (
-    <header
-      className={cn(
-        'fixed top-0 right-0 h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 z-30 transition-all duration-200',
-        sidebarCollapsed ? 'left-16' : 'left-60'
-      )}
-    >
-      {/* Search */}
-      <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 w-64">
-        <Search className="w-4 h-4 text-slate-400" />
-        <input
-          placeholder="Search..."
-          className="bg-transparent text-sm text-slate-600 placeholder:text-slate-400 outline-none w-full"
-        />
+    <header className={cn(
+      'fixed top-0 right-0 h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 z-30 transition-all duration-200',
+      'left-0 lg:left-auto',
+      sidebarCollapsed ? 'lg:left-16' : 'lg:left-60'
+    )}>
+      <div className="flex items-center gap-3">
+        {/* Mobile hamburger */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu className="w-5 h-5 text-slate-500" />
+        </Button>
+
+        {/* Logo on mobile */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
+            <span className="text-white font-bold text-xs">S</span>
+          </div>
+          <span className="font-semibold text-slate-900 text-sm">ShiftOS</span>
+        </div>
       </div>
 
       {/* Right side */}
@@ -61,8 +66,11 @@ export default function Navbar() {
           )}
         </Button>
 
-        {/* User avatar */}
-        <div className="flex items-center gap-2 ml-2 cursor-pointer" onClick={() => router.push('/profile')}>
+        {/* Avatar */}
+        <div
+          className="flex items-center gap-2 ml-1 cursor-pointer"
+          onClick={() => router.push('/profile')}
+        >
           <Avatar className="w-8 h-8">
             <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
               {initials}
