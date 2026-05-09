@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Calendar, Clock, ArrowLeftRight,
+  LayoutDashboard, Calendar, Clock, ArrowLeftRight, Timer,
   BarChart2, Bell, FileText, Settings, User,
   LogOut, ChevronLeft, ChevronRight, Shield, X, Users,
 } from 'lucide-react';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 const userNavItems = [
   { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/schedule',      label: 'Schedule',      icon: Calendar },
+  { href: '/sessions',      label: 'Sessions',      icon: Timer },
   { href: '/availability',  label: 'Availability',  icon: Clock },
   { href: '/requests',      label: 'Requests',      icon: ArrowLeftRight },
   { href: '/analytics',     label: 'Analytics',     icon: BarChart2 },
@@ -31,6 +32,7 @@ const adminNavItems = [
   { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/schedule',      label: 'Schedule',      icon: Calendar },
   { href: '/users',         label: 'Users',         icon: Users },
+  { href: '/sessions',      label: 'Sessions',      icon: Timer },
   { href: '/availability',  label: 'Availability',  icon: Clock },
   { href: '/requests',      label: 'Requests',      icon: ArrowLeftRight },
   { href: '/analytics',     label: 'Analytics',     icon: BarChart2 },
