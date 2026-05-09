@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Calendar, Clock, ArrowLeftRight,
   BarChart2, Bell, FileText, Settings, User,
-  LogOut, ChevronLeft, ChevronRight, Shield, X,
+  LogOut, ChevronLeft, ChevronRight, Shield, X, Users,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
@@ -15,9 +15,22 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+const userNavItems = [
   { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/schedule',      label: 'Schedule',      icon: Calendar },
+  { href: '/availability',  label: 'Availability',  icon: Clock },
+  { href: '/requests',      label: 'Requests',      icon: ArrowLeftRight },
+  { href: '/analytics',     label: 'Analytics',     icon: BarChart2 },
+  { href: '/notifications', label: 'Notifications', icon: Bell },
+  { href: '/reports',       label: 'Reports',       icon: FileText },
+  { href: '/settings',      label: 'Settings',      icon: Settings },
+  { href: '/profile',       label: 'Profile',       icon: User },
+];
+
+const adminNavItems = [
+  { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/schedule',      label: 'Schedule',      icon: Calendar },
+  { href: '/users',         label: 'Users',         icon: Users },
   { href: '/availability',  label: 'Availability',  icon: Clock },
   { href: '/requests',      label: 'Requests',      icon: ArrowLeftRight },
   { href: '/analytics',     label: 'Analytics',     icon: BarChart2 },
@@ -33,6 +46,7 @@ function NavItems({ onClose, collapsed = false }: { onClose?: () => void; collap
   const { user, logout } = useAuthStore();
   const { unreadCount } = useNotificationStore();
   const { toggleCollapsed } = useUIStore();
+  const navItems = user?.role === 'admin' ? adminNavItems : userNavItems;
 
   const handleLogout = async () => {
     await logout();
@@ -42,7 +56,6 @@ function NavItems({ onClose, collapsed = false }: { onClose?: () => void; collap
 
   return (
     <>
-      {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-100 shrink-0">
         <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
           <span className="text-white font-bold text-sm">S</span>
@@ -57,7 +70,6 @@ function NavItems({ onClose, collapsed = false }: { onClose?: () => void; collap
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
@@ -89,7 +101,6 @@ function NavItems({ onClose, collapsed = false }: { onClose?: () => void; collap
         })}
       </nav>
 
-      {/* Bottom */}
       <div className="p-2 border-t border-slate-100 space-y-1 shrink-0">
         {user?.role === 'admin' && !collapsed && (
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-medium">
@@ -126,14 +137,11 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* ── DESKTOP only — hidden on mobile ─────────────────────────── */}
       <aside
         style={{ width: sidebarCollapsed ? 64 : 240 }}
         className="hidden lg:flex fixed left-0 top-0 h-full bg-white border-r border-slate-100 flex-col z-40 shadow-sm overflow-hidden transition-all duration-200"
       >
         <NavItems collapsed={sidebarCollapsed} />
-
-        {/* Collapse toggle */}
         <button
           onClick={toggleCollapsed}
           className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50"
@@ -145,7 +153,6 @@ export default function Sidebar() {
         </button>
       </aside>
 
-      {/* ── MOBILE drawer — only shown when sidebarOpen is true ─────── */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
