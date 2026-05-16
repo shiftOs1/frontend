@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { shiftApi } from '@/lib/api';
-import { Shift } from '@/types';
+import { shiftApi, api } from '@/lib/api';
+import { Shift, User } from '@/types';
 import { toast } from 'sonner';
-import { Plus, MapPin, Clock, User, X, Loader2 } from 'lucide-react';
+import { Plus, MapPin, Clock, User as UserIcon, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +40,7 @@ interface ShiftForm {
   endTime: string;
   location: string;
   notes: string;
+  assignedUser: string;
 }
 
 const emptyForm: ShiftForm = {
@@ -49,6 +50,7 @@ const emptyForm: ShiftForm = {
   endTime: '17:00',
   location: '',
   notes: '',
+  assignedUser: '',
 };
 
 export default function SchedulePage() {
@@ -56,6 +58,7 @@ export default function SchedulePage() {
   const isAdmin = user?.role === 'admin';
 
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
@@ -64,13 +67,13 @@ export default function SchedulePage() {
 
   useEffect(() => {
     fetchShifts();
+    if (isAdmin) fetchUsers();
   }, []);
 
   const fetchShifts = async () => {
     setLoading(true);
     try {
-      const endpoint = isAdmin ? shiftApi.getAll() : shiftApi.getMy();
-      const { data } = await endpoint;
+      const { data } = isAdmin ? await shiftApi.getAll() : await shiftApi.getMy();
       setShifts(data.data.data || data.data.shifts || []);
     } catch {
       toast.error('Failed to load shifts');
@@ -79,11 +82,20 @@ export default function SchedulePage() {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const { data } = await api.get('/users', { params: { limit: 100 } });
+      setUsers(data.data.data || []);
+    } catch {}
+  };
+
   const calendarEvents = shifts.map((s) => ({
     id: s._id,
-    title: s.title,
+    title: s.assignedUser
+      ? `${s.title} — ${(s.assignedUser as any).name || 'Assigned'}`
+      : s.title,
     start: `${format(new Date(s.date), 'yyyy-MM-dd')}T${s.startTime}`,
-    end:   `${format(new Date(s.date), 'yyyy-MM-dd')}T${s.endTime}`,
+    end: `${format(new Date(s.date), 'yyyy-MM-dd')}T${s.endTime}`,
     backgroundColor: calendarColors[s.status] || '#3b82f6',
     borderColor: 'transparent',
     extendedProps: { shift: s },
@@ -103,7 +115,17 @@ export default function SchedulePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await shiftApi.create(form);
+      const payload: any = {
+        title: form.title,
+        date: form.date,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        location: form.location,
+        notes: form.notes,
+      };
+      if (form.assignedUser) payload.assignedUser = form.assignedUser;
+
+      await shiftApi.create(payload);
       toast.success('Shift created successfully');
       setShowModal(false);
       setForm(emptyForm);
@@ -112,6 +134,17 @@ export default function SchedulePage() {
       toast.error(err?.response?.data?.message || 'Failed to create shift');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAssignUser = async (shiftId: string, userId: string) => {
+    try {
+      await shiftApi.assign(shiftId, userId);
+      toast.success('User assigned successfully');
+      setSelectedShift(null);
+      fetchShifts();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to assign user');
     }
   };
 
@@ -128,7 +161,6 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Schedule</h1>
@@ -146,7 +178,6 @@ export default function SchedulePage() {
         )}
       </div>
 
-      {/* Calendar */}
       <Card className="border-0 shadow-sm">
         <CardContent className="pt-6">
           {loading ? (
@@ -209,10 +240,24 @@ export default function SchedulePage() {
                     {selectedShift.location}
                   </div>
                 )}
-                {selectedShift.assignedUser && (
+                {selectedShift.assignedUser ? (
                   <div className="flex items-center gap-2 text-slate-600">
-                    <User className="w-4 h-4 text-slate-400" />
+                    <UserIcon className="w-4 h-4 text-slate-400" />
                     {(selectedShift.assignedUser as any).name}
+                  </div>
+                ) : isAdmin && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-slate-500 font-medium">Assign to employee:</p>
+                    <select
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onChange={(e) => e.target.value && handleAssignUser(selectedShift._id, e.target.value)}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select employee...</option>
+                      {users.map((u) => (
+                        <option key={u._id} value={u._id}>{u.name}</option>
+                      ))}
+                    </select>
                   </div>
                 )}
                 {selectedShift.notes && (
@@ -250,7 +295,7 @@ export default function SchedulePage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-slate-900">Create Shift</h2>
@@ -302,6 +347,20 @@ export default function SchedulePage() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label>Assign to <span className="text-slate-400 text-xs">(optional)</span></Label>
+                  <select
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={form.assignedUser}
+                    onChange={(e) => setForm({ ...form, assignedUser: e.target.value })}
+                  >
+                    <option value="">Leave unassigned</option>
+                    {users.map((u) => (
+                      <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
                   <Label>Location <span className="text-slate-400 text-xs">(optional)</span></Label>
                   <Input
                     placeholder="Office, Remote..."
@@ -333,7 +392,10 @@ export default function SchedulePage() {
                     className="flex-1 bg-blue-600 hover:bg-blue-700"
                     disabled={saving}
                   >
-                    {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : 'Create Shift'}
+                    {saving
+                      ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                      : 'Create Shift'
+                    }
                   </Button>
                 </div>
               </form>
