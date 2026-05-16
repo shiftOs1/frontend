@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { motion } from 'framer-motion';
 
 export default function SettingsPage() {
-  const { user } = useAuthStore();
+  const { user, setAccessToken } = useAuthStore();
   const [saving, setSaving] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -46,14 +46,22 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      await api.post('/users/change-password', {
+      const { data } = await api.post('/users/change-password', {
         currentPassword: passForm.currentPassword,
         newPassword: passForm.newPassword,
       });
+
+      // Update access token if returned
+      if (data.data?.accessToken) {
+        setAccessToken(data.data.accessToken);
+        localStorage.setItem('accessToken', data.data.accessToken);
+      }
+
       toast.success('Password changed successfully');
       setPassForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err: any) {
-      setPassError(err?.response?.data?.message || 'Failed to change password');
+      const msg = err?.response?.data?.message || 'Failed to change password';
+      setPassError(msg);
     } finally {
       setSaving(false);
     }
@@ -90,7 +98,10 @@ export default function SettingsPage() {
                     type={showCurrent ? 'text' : 'password'}
                     placeholder="Enter current password"
                     value={passForm.currentPassword}
-                    onChange={(e) => setPassForm({ ...passForm, currentPassword: e.target.value })}
+                    onChange={(e) => {
+                      setPassForm({ ...passForm, currentPassword: e.target.value });
+                      if (passError) setPassError('');
+                    }}
                     required
                     className="pr-10"
                   />
@@ -111,7 +122,10 @@ export default function SettingsPage() {
                     type={showNew ? 'text' : 'password'}
                     placeholder="Min 8 chars, 1 uppercase, 1 number"
                     value={passForm.newPassword}
-                    onChange={(e) => setPassForm({ ...passForm, newPassword: e.target.value })}
+                    onChange={(e) => {
+                      setPassForm({ ...passForm, newPassword: e.target.value });
+                      if (passError) setPassError('');
+                    }}
                     required
                     className="pr-10"
                   />
@@ -131,7 +145,10 @@ export default function SettingsPage() {
                   type="password"
                   placeholder="Repeat new password"
                   value={passForm.confirmPassword}
-                  onChange={(e) => setPassForm({ ...passForm, confirmPassword: e.target.value })}
+                  onChange={(e) => {
+                    setPassForm({ ...passForm, confirmPassword: e.target.value });
+                    if (passError) setPassError('');
+                  }}
                   required
                 />
               </div>
@@ -151,7 +168,11 @@ export default function SettingsPage() {
         </Card>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Account</CardTitle>
@@ -166,11 +187,11 @@ export default function SettingsPage() {
             ].map((item) => (
               <div key={item.label} className="flex justify-between py-2 border-b border-slate-50 last:border-0">
                 <span className="text-slate-500">{item.label}</span>
-                <span className={`font-medium ${
+                <span className={`font-medium capitalize ${
                   item.label === 'Email verified'
                     ? user?.isEmailVerified ? 'text-green-600' : 'text-red-500'
                     : 'text-slate-900'
-                } capitalize`}>
+                }`}>
                   {item.value}
                 </span>
               </div>
