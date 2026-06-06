@@ -8,6 +8,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { useUIStore } from '@/store/uiStore';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import { cn } from '@/lib/utils';
 
 export default function Navbar() {
@@ -25,12 +26,11 @@ export default function Navbar() {
 
   return (
     <header className={cn(
-      'fixed top-0 right-0 h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-6 z-30 transition-all duration-200',
+      'fixed top-0 right-0 h-16 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 z-30 transition-all duration-200',
       'left-0 lg:left-auto',
       sidebarCollapsed ? 'lg:left-16' : 'lg:left-60'
     )}>
       <div className="flex items-center gap-3">
-        {/* Mobile hamburger */}
         <Button
           variant="ghost"
           size="icon"
@@ -39,18 +39,18 @@ export default function Navbar() {
         >
           <Menu className="w-5 h-5 text-slate-500" />
         </Button>
-
-        {/* Logo on mobile */}
         <div className="flex items-center gap-2 lg:hidden">
           <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
             <span className="text-white font-bold text-xs">S</span>
           </div>
-          <span className="font-semibold text-slate-900 text-sm">ShiftOS</span>
+          <span className="font-semibold text-slate-900 dark:text-white text-sm">ShiftOS</span>
         </div>
       </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
         <Button
           variant="ghost"
@@ -77,7 +77,9 @@ export default function Navbar() {
             </AvatarFallback>
           </Avatar>
           <div className="hidden sm:block">
-            <p className="text-sm font-medium text-slate-900 leading-none">{user?.name}</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white leading-none">
+              {user?.name}
+            </p>
             <p className="text-xs text-slate-400 mt-0.5 capitalize">{user?.role}</p>
           </div>
         </div>
